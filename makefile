@@ -13,6 +13,9 @@ setup:
 compile:
 	arduino-cli compile --warnings all --fqbn arduino:avr:uno .
 
+debug:
+	arduino-cli compile --optimize-for-debug --warnings all --fqbn arduino:avr:uno .
+
 deploy: $(PERMISSIONS)
 	arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno .
 

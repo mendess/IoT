@@ -1,12 +1,12 @@
 enum { BUTTON_PIN = 3, DELAY = 1000 };
 
-typedef enum {
+enum STATE {
+    OFF = 0,
     YELLOW = 4,
     BLUE = 5,
     RED = 6,
     GREEN = 7,
-    OFF = 8,
-} LED;
+};
 
 volatile bool PAUSE = false;
 
@@ -24,20 +24,18 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), toggle_pause, FALLING);
 }
 
-#define N_LEDS ((sizeof leds / sizeof(int)) - 1)
-#define PREV(i) (((i) -1) % N_LEDS)
-
 void loop() {
-    LED const leds[] = {RED, GREEN, BLUE, YELLOW, OFF};
+    constexpr STATE states[] = {RED, GREEN, BLUE, YELLOW, OFF};
+    constexpr auto n_states = sizeof states / sizeof *states;
     static size_t state = 0;
     if (PAUSE) {
         return;
-    } else if (leds[state] == OFF) {
-        for (size_t i = 0; i < N_LEDS; ++i) digitalWrite(leds[i], LOW);
+    } else if (states[state] == OFF) {
+        for (auto led : states) digitalWrite(led, LOW);
     } else {
-        digitalWrite(leds[PREV(state)], LOW);
-        digitalWrite(leds[state], HIGH);
+        if (state > 0) digitalWrite(states[state - 1], LOW);
+        digitalWrite(states[state], HIGH);
     }
-    state = (state + 1) % (N_LEDS + 1);
+    state = (state + 1) % n_states;
     delay(DELAY);
 }
