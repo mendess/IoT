@@ -51,3 +51,15 @@ Module.symvers
 Mkfile.old
 dkms.conf
 build/
+*.toc
+*.aux
+*.log
+*.pdf
+*.html
+*.bbl
+*.blg
+_minted-*/
+*.nav
+*.out
+*.snm
+*.vrb
