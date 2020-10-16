@@ -4,7 +4,7 @@
 \usepackage{color}
 \usepackage{enumitem}
 \usepackage{float}
-\usepackage{graphics}
+\usepackage{graphicx}
 \usepackage{minted}
 \usepackage{geometry}
 \geometry{
@@ -31,8 +31,8 @@
     \centering
     \begin{tabular}{|l|l|p{10cm}|}
         \hline
-        \multicolumn{3}{|l|}{Group: XX} \\[1.5ex] \hline
-        Student 1 & XXXXX & Dominika Florczykowska \\ [1.5ex]\hline
+        \multicolumn{3}{|l|}{Group: 12} \\[1.5ex] \hline
+        Student 1 & 98380 & Dominika Florczykowska \\ [1.5ex]\hline
         Student 2 & 97144 & Pedro Mendes \\ [1.5ex]\hline
     \end{tabular}
 \end{table}
@@ -42,8 +42,8 @@ The goal of this work is to put students for the first time in touch with the
 Arduino environment to drive simple actuators (in the case LEDs).
 \section{Description:}
 Build an embedded system using the Arduino UNO board to control 4 LEDs with
-different colors. In normal operation, in each 5 seconds period the system will
-have the the following
+different colours. In normal operation, in each 5 seconds period the system will
+have the following
 
 \begin{enumerate}
     \item Red LED ON
@@ -53,8 +53,8 @@ have the the following
     \item All LEDs OFF
 \end{enumerate}
 
-This behavior is then repeated.
-
+This behaviour is then repeated.
+\newpage
 The figure represents the circuit to drive the LEDs to be assembled.
 
 \begin{figure}[H]
@@ -66,40 +66,91 @@ The figure represents the circuit to drive the LEDs to be assembled.
 
 Calculate the values of the resistors associated with the LEDs.
 
-\begin{itemize}[label={}]
-    \item R\_red
-    \item R\_green
-    \item R\_blue
-    \item R\_yellow
-\end{itemize}
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{l|r}
+        Red & 220 $\Omega$ \\ \hline
+        Green & 220 $\Omega$ \\ \hline
+        Blue & 220 $\Omega$  \\\hline
+        Yellow & 220 $\Omega$ \\
+    \end{tabular}
+    \caption{Resistance associated with each LED}
+\end{table}
 
 Interface the circuit to a press button.
 
-Whenever the button is pressed (OFF → ON → OFF) the LED activated at the moment must
-remain ON. (In stage 5 the system stops with all LEDs OFF.) With the system stopped it is
-easier to read the voltage drop on each LED. When the button is pressed again the system
-will continue its normal operation sequence.
+Whenever the button is pressed (OFF → ON → OFF) the LED activated at the moment
+must remain ON. (In stage 5 the system stops with all LEDs OFF.) With the system
+stopped it is easier to read the voltage drop on each LED. When the button is
+pressed again the system will continue its normal operation sequence.
 
+\newpage
 Draw and design the press button interface to the controller.
 
 \begin{figure}[H]
     \centering
-    \includegraphics{button_circuit.png}
+    \includegraphics[width=0.7\textwidth]{button_circuit.png}
+    \caption{Graphical drawing}
 \end{figure}
 
-Measure the voltage drops on the LEDs:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{circuit2.png}
+    \caption{Technical drawing}
+\end{figure}
 
-\begin{itemize}[label={}]
-    \item V\_red
-    \item V\_green
-    \item V\_blue
-    \item V\_yellow
-\end{itemize}
+Measure the voltage drops on the LEDs (with a multimeter):
 
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{l|r}
+        Red & 1.9 $V$ \\ \hline
+        Green & 2.09 $V$ \\ \hline
+        Blue & 2.93 $V$ \\ \hline
+        Yellow & 2.00 $V$ \\
+    \end{tabular}
+    \caption{Voltage drops on the LEDs}
+\end{table}
 
 Estimate the power consumption of the interface (the circuit with resistors and
 LEDs in the figure) in normal operation.
-
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{p{0.4\textwidth}|p{0.4\textwidth}}
+        Red LED power consumption
+        \[I_{red} = \frac{U - U_{red}}{R}\]
+        \[I_{red} = \frac{5 - 1.9}{220}\]
+        \[I_{red} =  0.01409090909 A\]
+        \[P_{red} = U \times I_{red}\]
+        \[P_{red} = 5 \times 0.01409090909\]
+        \[P_{red} = 0.0705 W\]
+        &
+        Green LED power consumption
+        \[I_{green} = \frac{U - U_{green}}{R}\]
+        \[I_{green} = \frac{5 - 2.09}{220}\]
+        \[I_{green} = 0.01322727273 A\]
+        \[P_{green} = U \times I_{green}\]
+        \[P_{green} = 5 \times 0.01322727273\]
+        \[P_{green} = 0.0661 W\]
+        \\ \hline
+        Blue LED power consumption
+        \[I_{blue} = \frac{U - U_{blue}}{R}\]
+        \[I_{blue} = \frac{5 - 2.93}{220}\]
+        \[I_{blue} = 0.00940909091 A\]
+        \[P_{blue} = U \times I_{blue}\]
+        \[P_{blue} = 5 \times 0.00940909091\]
+        \[P_{blue} = 0.0470 W\]
+        &
+        Yellow LED power consumption
+        \[I_{yellow} = \frac{U - U_{yellow}}{R}\]
+        \[I_{yellow} = \frac{5 - 2}{220}\]
+        \[I_{yellow} = 0.01363636364 A\]
+        \[P_{yellow} = U \times I_{yellow}\]
+        \[P_{yellow} = 5 \times 0.01363636364\]
+        \[P_{yellow} = 0.0682 W\] \\
+    \end{tabular}
+    \caption{Power consumption of the interface}
+\end{table}
 
 \newpage
 
