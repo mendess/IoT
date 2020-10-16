@@ -1,5 +1,8 @@
+// usefull constants
 enum { BUTTON_PIN = 3, DELAY = 1000 };
 
+// States the arduino can be in.
+// LED states have the value of the led pin
 enum STATE {
     OFF = 0,
     YELLOW = 4,
@@ -12,6 +15,7 @@ volatile bool PAUSE = false;
 
 void toggle_pause() {
     PAUSE = !PAUSE;
+    digitalWrite(LED_BUILTIN, PAUSE);
 }
 
 void setup() {
@@ -25,8 +29,8 @@ void setup() {
 }
 
 void loop() {
-    constexpr STATE states[] = {RED, GREEN, BLUE, YELLOW, OFF};
-    constexpr auto n_states = sizeof states / sizeof *states;
+    static const STATE states[] = {RED, GREEN, BLUE, YELLOW, OFF};
+    static const auto n_states = sizeof states / sizeof *states;
     static size_t state = 0;
     if (PAUSE) {
         return;
