@@ -19,5 +19,8 @@ debug:
 deploy: $(PERMISSIONS)
 	arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno .
 
+attach: $(PERMISSIONS)
+	screen /dev/ttyACM0 9600
+
 permissions:
 	sudo chown :${USER} /dev/ttyACM0
