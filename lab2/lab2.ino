@@ -1,5 +1,7 @@
 #include "sensor.hpp"
 
+enum { TemperatureThreashold = 28 };
+
 enum LEDS {
     YELLOW = 5,
     RED = 6,
@@ -16,11 +18,19 @@ const Sensor SENSORS[] = {
     Sensor(
         Temperature,
         YELLOW,
-        [](Sensor const& s, u16 value) {
-            Serial.print("Temperature: ");
-            Serial.print(value);
-            Serial.print("C");
-            analogWrite(s.led, value);
+        [](Sensor const& s, u16 voltage) {
+            auto degreesC = ((voltage * 0.004882814) - 0.5) * 100.0;
+            if (degreesC > TemperatureThreashold) {
+                Serial.print("Temperature: \x1b[32m");
+                Serial.print(degreesC);
+                Serial.println("C\x1b[0m");
+                digitalWrite(s.led, HIGH);
+            } else {
+                Serial.print("Temperature: \x1b[31m");
+                Serial.print(degreesC);
+                Serial.println("C\x1b[0m");
+                digitalWrite(s.led, LOW);
+            }
         }),
     Sensor(
         Light,

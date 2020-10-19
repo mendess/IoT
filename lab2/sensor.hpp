@@ -10,9 +10,9 @@ class Sensor {
 
     void setup() const { pinMode(led, OUTPUT); }
 
-    void update() const { (feedback)(*this, read_sensor()); }
+    void update() const { (feedback)(*this, get_sensor_voltage()); }
 
   private:
     const Feedback feedback;
-    u16 read_sensor() const { return analogRead(sensor); }
+    u16 get_sensor_voltage() const { return analogRead(sensor); }
 };
