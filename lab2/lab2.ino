@@ -19,42 +19,21 @@ const Sensor SENSORS[] = {
         [](Sensor const& s, u16 value) {
             Serial.print("Temperature: ");
             Serial.print(value);
-            Serial.println("C"); // print the temperature status
+            Serial.print("C");
             analogWrite(s.led, value);
         }),
     Sensor(
         Light,
         RED,
         [](Sensor const& s, u16 value) {
-            Serial.print("Analog reading = ");
-            Serial.print(value); // the raw analog reading
-            if (value < 10) {
-                Serial.println(" - Dark");
-            } else if (value < 200) {
-                Serial.println(" - Dim");
-            } else if (value < 500) {
-                Serial.println(" - Light");
-            } else if (value < 800) {
-                Serial.println(" - Bright");
-            } else {
-                Serial.println(" - Very bright");
-            }
-            u8 i = 255 - map(value, 0, 1023, 0, 255);
-            Serial.print("Setting red led to ");
-            Serial.print(i);
-            Serial.println("% power");
-            analogWrite(s.led, i);
+            analogWrite(s.led, 255 - map(value, 0, 1023, 0, 255));
         }),
     Sensor(Potentiometer, GREEN, [](Sensor const& s, u16 value) {
-        u8 i = map(value, 0, 1023, 0, 255);
-        Serial.print("Setting green led to ");
-        Serial.print(i);
-        Serial.println("% power");
-        analogWrite(s.led, i);
+        analogWrite(s.led, map(value, 0, 1023, 0, 255));
     })};
 
 void setup() {
-    for(auto& s: SENSORS) {
+    for (auto& s : SENSORS) {
         s.setup();
     }
     pinMode(LED_BUILTIN, OUTPUT);
@@ -62,8 +41,7 @@ void setup() {
 }
 
 void loop() {
-    for(auto& s: SENSORS) {
+    for (auto& s : SENSORS) {
         s.update();
     }
-    /* delay(1000); */
 }
