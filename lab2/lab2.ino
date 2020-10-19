@@ -1,11 +1,12 @@
+#include "print.hpp"
 #include "sensor.hpp"
 
 enum { TemperatureThreashold = 28 };
 
 enum LEDS {
-    YELLOW = 5,
-    RED = 6,
-    GREEN = 9,
+    Yellow = 5,
+    Red = 6,
+    Green = 9,
 };
 
 enum Sensors {
@@ -17,41 +18,41 @@ enum Sensors {
 const Sensor SENSORS[] = {
     Sensor(
         Temperature,
-        YELLOW,
+        Yellow,
         [](Sensor const& s, u16 voltage) {
             auto degreesC = ((voltage * 0.004882814) - 0.5) * 100.0;
             if (degreesC > TemperatureThreashold) {
-                Serial.print("Temperature: \x1b[32m");
-                Serial.print(degreesC);
-                Serial.println("C\x1b[0m");
+                println("Temperature: \x1b[32m", degreesC, "C\x1b[0m");
                 digitalWrite(s.led, HIGH);
             } else {
-                Serial.print("Temperature: \x1b[31m");
-                Serial.print(degreesC);
-                Serial.println("C\x1b[0m");
+                println("Temperature: \x1b[31m", degreesC, "C\x1b[0m");
                 digitalWrite(s.led, LOW);
             }
         }),
     Sensor(
         Light,
-        RED,
+        Red,
         [](Sensor const& s, u16 value) {
-            analogWrite(s.led, 255 - map(value, 0, 1023, 0, 255));
+            analogWrite(s.led, map(value, 0, 1023, 255, 0));
         }),
-    Sensor(Potentiometer, GREEN, [](Sensor const& s, u16 value) {
-        analogWrite(s.led, map(value, 0, 1023, 0, 255));
+    Sensor(Potentiometer, Green, [](Sensor const& s, u16 value) {
+        static u32 last_blink_time = 0UL;
+        static bool led_on = false;
+        u32 const blink_interval = map(value, 0, 1023, 200, 2000);
+        u32 const now = millis();
+        if (last_blink_time + blink_interval < now) {
+            digitalWrite(s.led, led_on);
+            led_on = !led_on;
+            last_blink_time = now;
+        }
     })};
 
 void setup() {
-    for (auto& s : SENSORS) {
-        s.setup();
-    }
+    for (auto& s : SENSORS) s.setup();
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(9600);
 }
 
 void loop() {
-    for (auto& s : SENSORS) {
-        s.update();
-    }
+    for (auto& s : SENSORS) s.update();
 }
