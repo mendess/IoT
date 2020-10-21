@@ -1,4 +1,3 @@
-#include "print.hpp"
 #include "sensor.hpp"
 
 enum { TemperatureThreashold = 28 };
@@ -22,10 +21,8 @@ const Sensor SENSORS[] = {
         [](Sensor const& s, u16 voltage) {
             auto degreesC = ((voltage * 0.004882814) - 0.5) * 100.0;
             if (degreesC > TemperatureThreashold) {
-                println("Temperature: \x1b[32m", degreesC, "C\x1b[0m");
                 digitalWrite(s.led, HIGH);
             } else {
-                println("Temperature: \x1b[31m", degreesC, "C\x1b[0m");
                 digitalWrite(s.led, LOW);
             }
         }),
