@@ -47,7 +47,8 @@
 \end{table}
 
 \section{Goal:}
-The goal of this work is to sense physical quantities and to control actuators according to the measured environment.
+The goal of this work is to sense physical quantities and to control actuators
+according to the measured environment.
 
 \section{Description:}
 Build an embedded system using an Arduino UNO board to simultaneously control 3
@@ -65,10 +66,10 @@ temperature, rotation angle (potentiometer) and light intensity.
     \item Light --- The red LED for the light intensity function must change
         continuously its own light intensity based on the light intensity sensed
         in the surrounding environment from
-        \begin{itemize}
+        \begin{list}{$\circ$}{}
             \item Darkness $\rightarrow$ LED fully ON, to
             \item Brightness $\rightarrow$ LED OFF
-        \end{itemize}
+        \end{list}
 \end{itemize}
 
 A diagram of the circuit is represented in the figure.
@@ -89,7 +90,7 @@ A diagram of the circuit is represented in the figure.
     \item \url{https://www.arduino.cc/en/Reference/Delay}
 \end{enumerate}
 
-\section{Mapping analog measurements}
+\section{Mapping analog measurements}\label{s:mapping}
 
 Usually the digital readings retrieved from sensors do not correspond directly
 to the value of the physical quantity, but rather to values between 0 and a
@@ -113,8 +114,9 @@ case a temperature dependent resistor) to the real temperature several
 transformations may be required
 
 \begin{itemize}
-    \item to linearize the transfer function of the sensing device RT = f(T), and
-    \item to linearize the transfer function of the circuit in which the sensor is included.
+    \item to linearize the transfer function of the sensing device $RT = f(T)$, and
+    \item to linearize the transfer function of the circuit in which the sensor
+        is included.
 \end{itemize}
 
 For the device and configuration to be used (based on a TMP35 component) check the function
@@ -127,7 +129,7 @@ To access an external analog sensor you must attach it to an Arduino analog pin.
     int const tempSensor = A0;
 \end{minted}
 
-where \texttt{A0} is the physical pin where the sensor is attached.
+Where \texttt{A0} is the physical pin where the sensor is attached.
 
 To read the value assigned to a specific pin use the Arduino function
 \texttt{analogRead(PIN)}, as follows:
@@ -176,24 +178,62 @@ Avoid, or use very carefully, the delay function provided in the Arduino IDE sin
 \paragraph{Question:}
 
 For each of the three pairs sensor-actuator describe:
+
 \begin{enumerate}
     \item the mapping process implemented;
     \item the calibration setup;
-    \item the process, or tecnique, used to modulate the behaviour of the
+    \item the process, or technique, used to modulate the behaviour of the
         actuator;
     \item the setup prepared to demonstrate the functionality of the system.
 \end{enumerate}
 
 \paragraph{Answer:}
 
-Temperature:
+The Arduino has an \texttt{analogRead} range from 0 to 1023, and an
+\texttt{analogWrite} range from 0 to 255, therefore the data from any analogRead
+needs to be mapped to fit into the smaller range.
 
+\begin{itemize}
+    \item \textbf{Temperature:}
+        This sensor's value had to be linearized as explained in
+        Section~\ref{s:mapping}. Using the function described there,
+        \[T = (((sensor value / 1024.0) \times 5.0) - 0.5) \times  100\]
+        we where able to obtain the temperature in degrees.
 
-Rotation:
+        To demonstrate the functionality simply touch the sensor with both
+        fingers to increase the temperature above 25 degrees, this constant was
+        picked for being above room temperature, but low enough that body heat
+        can be enough to light up the LED.
+    \item \textbf{Light:}
+        To calibrate the sensor 2 experiments were performed to obtain the 2
+        extremes, first the sensor was placed in a dark room with an opaque piece
+        of plastic on top of it to obtain the lowest possible reading, which was
+        `1`, then the sensor was exposed to a bright white light (phone
+        flash light) to obtains the highest possible reading which was 1021.
 
+        These values were then mapped to the accepted range of the
+        \texttt{analogWrite} function $[0, 255]$. This interval is actually
+        inverted when passed to the map function since the LED will light up at
+        its highest intensity when the sensor reads lowest level of light in the
+        environment.
 
-Light:
+        \[map(value, 1, 1021, 255, 0)\]
 
+        The modulation of the behaviour is just a direct call to
+        \texttt{analogWrite} with the value returned from \texttt{map}.
+    \item \textbf{Rotation:}
+        The calibration of this sensor was simple, we measured the value read
+        from \texttt{analogRead} when it was at the minimum and maximum
+        rotation, these mapped exactly to 0 and 1023. Since we work in
+        milliseconds, we then map this range to the range $[200, 2000]$ (0.2
+        seconds to 2 seconds) which will be stored as the current blink period
+        (in the code named \texttt{blink\_period}).
+
+        Then to modulate the behaviour of the actuator, the program checks the
+        \texttt{millis} function and the last time the led state has been
+        changed, and sees if \texttt{blink\_period} has passed, if so, then the
+        led state is toggled.
+\end{itemize}
 
 \paragraph{Question:}
 
@@ -201,8 +241,10 @@ What is the system software pattern of the application?
 
 \paragraph{Answer:}
 
-Round Robin pattern. Since every task is executed/checked continuously in the
-same order. %% This could use a better explanation, maybe read the slides and
+Round Robin pattern. All the tasks are executed continuously in the main loop in
+the same order (one at a time). Each task checks for the value read by a
+corresponding sensor and responds by showing correct output with the use of LED.
+%% This could use a better explanation, maybe read the slides and
 % copy from there
 
 \paragraph{Question:}
@@ -211,5 +253,6 @@ What are the timing constraints of the system?
 
 \paragraph{Answer:}
 
+%% idk what he means
 
 \end{document}

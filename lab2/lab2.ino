@@ -19,7 +19,7 @@ const Sensor SENSORS[] = {
         Temperature,
         Yellow,
         [](Sensor const& s, u16 voltage) {
-            auto degreesC = ((voltage * 0.004882814) - 0.5) * 100.0;
+            auto degreesC = (((voltage / 1024.0) * 5.0) - 0.5) * 100.0;
             if (degreesC > TemperatureThreashold) {
                 digitalWrite(s.led, HIGH);
             } else {
@@ -30,7 +30,7 @@ const Sensor SENSORS[] = {
         Light,
         Red,
         [](Sensor const& s, u16 value) {
-            analogWrite(s.led, map(value, 0, 1023, 255, 0));
+            analogWrite(s.led, map(value, 1, 1021, 255, 0));
         }),
     Sensor(Potentiometer, Green, [](Sensor const& s, u16 value) {
         static u32 last_blink_time = 0UL;
