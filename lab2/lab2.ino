@@ -35,9 +35,9 @@ const Sensor SENSORS[] = {
     Sensor(Potentiometer, Green, [](Sensor const& s, u16 value) {
         static u32 last_blink_time = 0UL;
         static bool led_on = false;
-        u32 const blink_interval = map(value, 0, 1023, 200, 2000);
+        u32 const half_blink_interval = map(value, 0, 1023, 100, 1000);
         u32 const now = millis();
-        if (last_blink_time + blink_interval < now) {
+        if (last_blink_time + half_blink_interval < now) {
             digitalWrite(s.led, led_on);
             led_on = !led_on;
             last_blink_time = now;

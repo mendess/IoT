@@ -123,7 +123,9 @@ For the device and configuration to be used (based on a TMP35 component) check t
 \[T = (((sensor value / 1024.0) \times 5.0) - 0.5) \times  100\]
 
 \section{Programming with analog sensors:}
-To access an external analog sensor you must attach it to an Arduino analog pin. The software allocation of a sensor to an analog pin is done using the following code:
+To access an external analog sensor you must attach it to an Arduino analog pin.
+The software allocation of a sensor to an analog pin is done using the following
+code:
 
 \begin{minted}{cpp}
     int const tempSensor = A0;
@@ -139,7 +141,10 @@ To read the value assigned to a specific pin use the Arduino function
 \end{minted}
 
 \section{Debug:}
-In order to control some variables and debug your program it is possible to print them to the Serial Monitor available in the Arduino IDE. This kind of tool is useful, for example, to keep track of the temperature variation or to help the calibration of the system.
+In order to control some variables and debug your program it is possible to
+print them to the Serial Monitor available in the Arduino IDE. This kind of tool
+is useful, for example, to keep track of the temperature variation or to help
+the calibration of the system.
 
 To use this feature, first start a serial communication with the PC:
 
@@ -162,7 +167,8 @@ blocks, one for each function to be implemented (e.g.\ read temperature sensor,
 control temperature alarm).  In the next laboratory work you will have to
 distribute several functions across separate Arduino controllers.
 
-Avoid, or use very carefully, the delay function provided in the Arduino IDE since it just stops the execution flow during the specified time interval.
+Avoid, or use very carefully, the delay function provided in the Arduino IDE
+since it just stops the execution flow during the specified time interval.
 
 \subsection{Code:}
 
@@ -204,6 +210,7 @@ needs to be mapped to fit into the smaller range.
         fingers to increase the temperature above 25 degrees, this constant was
         picked for being above room temperature, but low enough that body heat
         can be enough to light up the LED.
+
     \item \textbf{Light:}
         To calibrate the sensor 2 experiments were performed to obtain the 2
         extremes, first the sensor was placed in a dark room with an opaque piece
@@ -221,18 +228,19 @@ needs to be mapped to fit into the smaller range.
 
         The modulation of the behaviour is just a direct call to
         \texttt{analogWrite} with the value returned from \texttt{map}.
+
     \item \textbf{Rotation:}
         The calibration of this sensor was simple, we measured the value read
         from \texttt{analogRead} when it was at the minimum and maximum
         rotation, these mapped exactly to 0 and 1023. Since we work in
-        milliseconds, we then map this range to the range $[200, 2000]$ (0.2
-        seconds to 2 seconds) which will be stored as the current blink period
-        (in the code named \texttt{blink\_period}).
+        milliseconds, we then map this range to the range $[100, 1000]$ (0.1
+        seconds to 1 seconds) which will be stored as the current half blink
+        period (in the code named \texttt{half\_blink\_period}).
 
         Then to modulate the behaviour of the actuator, the program checks the
         \texttt{millis} function and the last time the led state has been
-        changed, and sees if \texttt{blink\_period} has passed, if so, then the
-        led state is toggled.
+        changed, and sees if \texttt{half\_blink\_period} has passed, if so,
+        then the led state is toggled.
 \end{itemize}
 
 \paragraph{Question:}
@@ -244,8 +252,6 @@ What is the system software pattern of the application?
 Round Robin pattern. All the tasks are executed continuously in the main loop in
 the same order (one at a time). Each task checks for the value read by a
 corresponding sensor and responds by showing correct output with the use of LED.
-%% This could use a better explanation, maybe read the slides and
-% copy from there
 
 \paragraph{Question:}
 
@@ -253,6 +259,8 @@ What are the timing constraints of the system?
 
 \paragraph{Answer:}
 
-%% idk what he means
+The system must complete each round of the round robin loop in less than 0.1
+seconds to make sure the blink period of the green led is maintained in the
+worst case
 
 \end{document}
