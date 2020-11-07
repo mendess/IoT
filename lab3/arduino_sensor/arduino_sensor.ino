@@ -1,6 +1,6 @@
 #include "sensor.hpp"
 
-enum { TemperatureThreashold = 25 };
+enum { TemperatureThreashold = 22 };
 
 static auto TEMPERATURE = Sensor(A2);
 
@@ -10,13 +10,13 @@ void setup() {
 }
 
 void loop() {
-    TEMPERATURE.read([](u16 voltage) {
-        auto degreesC = ((500 * voltage) >> 10) - 50;
-        Serial.println(degreesC);
-        if (degreesC > TemperatureThreashold) {
-            digitalWrite(5, HIGH);
-        } else {
-            digitalWrite(5, LOW);
-        }
-    });
+    auto const voltage = TEMPERATURE.read();
+    auto const degreesC = ((50 * voltage) / 102) - 50;
+    Serial.println(degreesC);
+    if (degreesC > TemperatureThreashold) {
+        digitalWrite(5, HIGH);
+    } else {
+        digitalWrite(5, LOW);
+    }
+    delay(1);
 }
