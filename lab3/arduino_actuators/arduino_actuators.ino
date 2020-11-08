@@ -1,10 +1,10 @@
 #include "actuators.hpp"
 
-enum { TemperatureThreashold = 28 };
+enum { TemperatureThreshold = 28 };
 
 void yellow(Led led, u16 voltage) {
     auto degreesC = (((voltage / 1024.0) * 5.0) - 0.5) * 100.0;
-    if (degreesC > TemperatureThreashold) {
+    if (degreesC > TemperatureThreshold) {
         digitalWrite(led, HIGH);
     } else {
         digitalWrite(led, LOW);
