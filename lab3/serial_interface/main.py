@@ -3,7 +3,11 @@ import serial
 import logging
 import requests
 
+
 ROLE = 'sensor' # sensor or actuator
+BAUDRATE = 9600
+DEVICE_PORT = "/dev/ttyACM0"
+TIMEOUT = 10
 POTENTIOMETER = 'potentiometer'
 LIGHT = 'light'
 TEMP = 'temp'
@@ -28,10 +32,9 @@ class UARTConsole:
 
     def __init__(self):
         self.ser = serial.Serial()  # open serial port
-        self.ser.baudrate = 9600
-        self.ser.port = "/dev/ttyACM0"
-        self.ser.timeout = 10
-        self.ser.setDTR(1)
+        self.ser.baudrate = BAUDRATE
+        self.ser.port = DEVICE_PORT
+        self.ser.timeout = TIMEOUT
         try:
             self.ser.open()
         except Exception as e:
