@@ -7,7 +7,7 @@ ROLE = 'sensor' # sensor or actuator
 POTENTIOMETER = 'potentiometer'
 LIGHT = 'light'
 TEMP = 'temp'
-URL = "http://localhost:8000"
+URL = "https://iot-lab3.herokuapp.com"
 
 
 class Api:
@@ -20,7 +20,8 @@ class Api:
         return response.json()['value']
 
     def setSensor(self, sensor, value):
-        requests.post(self.url + f'/{sensor}', data={'value': value})
+        response = requests.post(self.url + f'/{sensor}', json={'value': value})
+        return response.status_code
 
 
 class UARTConsole:
@@ -28,7 +29,7 @@ class UARTConsole:
     def __init__(self):
         self.ser = serial.Serial()  # open serial port
         self.ser.baudrate = 9600
-        self.ser.port = "/dev/ttyACM1"
+        self.ser.port = "/dev/ttyACM0"
         self.ser.timeout = 10
         self.ser.setDTR(1)
         try:
@@ -49,8 +50,7 @@ class UARTConsole:
         return text_read
 
     def write(self, value):
-        # TODO
-        pass
+        self.ser.write(value.encode())
 
 
 def main():
@@ -60,18 +60,28 @@ def main():
         if ROLE == 'sensor':
             while True:
                 analog_read = uart.read()
-                print(analog_read)
-                # TODO: parse and calculate
-                # TODO: make API call
-                time.sleep(1.0)
+                if(analog_read != ""):
+                    print(analog_read)
+                value_read = analog_read.split(":")
+                try:
+                    if value_read[0] == "P":
+                       api.setSensor(POTENTIOMETER, value_read[1])
+                    elif value_read[0] == "L":
+                        api.setSensor(LIGHT, value_read[1])
+                    elif value_read[0] == "T":
+                        print(api.setSensor(TEMP, value_read[1]))
+                except Exception as e:
+                    print(e)
+                time.sleep(0.1)
         elif ROLE == 'actuator':
             while True:
                 potentiometer = api.getSensor(POTENTIOMETER)
                 light = api.getSensor(LIGHT)
                 temp = api.getSensor(TEMP)
-                uart.write(potentiometer)
-                uart.write(light)
-                uart.write(temp)
+                uart.write(f"P:{potentiometer}")
+                uart.write(f"L:{light}")
+                uart.write(f"T:{temp}")
+                time.sleep(0.1)
     except KeyboardInterrupt:
         exit(1)
 
