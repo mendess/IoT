@@ -77,13 +77,22 @@ def main():
                     print(e)
                 time.sleep(0.1)
         elif ROLE == 'actuator':
+            potentiometer_current = 0
+            light_current = 0
+            temp_current = 0
             while True:
-                potentiometer = api.getSensor(POTENTIOMETER)
-                light = api.getSensor(LIGHT)
-                temp = api.getSensor(TEMP)
-                uart.write(f"P:{potentiometer}")
-                uart.write(f"L:{light}")
-                uart.write(f"T:{temp}")
+                potentiometer_read = api.getSensor(POTENTIOMETER)
+                if potentiometer_read != potentiometer_current:
+                    potentiometer_current = potentiometer_read
+                    uart.write(f"P:{potentiometer_current}")
+                light_read = api.getSensor(LIGHT)
+                if light_read != light_current:
+                    light_current = light_read
+                    uart.write(f"L:{light_current}")
+                temp_read = api.getSensor(TEMP)
+                if temp_read != temp_current:
+                    temp_current = temp_read
+                    uart.write(f"T:{temp_current}")
                 time.sleep(0.1)
     except KeyboardInterrupt:
         exit(1)
