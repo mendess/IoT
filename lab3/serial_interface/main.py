@@ -72,7 +72,7 @@ def main():
                     elif value_read[0] == "L":
                         api.setSensor(LIGHT, value_read[1])
                     elif value_read[0] == "T":
-                        print(api.setSensor(TEMP, value_read[1]))
+                        api.setSensor(TEMP, value_read[1])
                 except Exception as e:
                     print(e)
                 time.sleep(0.1)
