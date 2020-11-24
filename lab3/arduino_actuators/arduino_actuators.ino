@@ -37,6 +37,10 @@ void setup() {
     Serial.begin(9600);
 }
 
+void read_serial(char* buf, size_t size) {
+    S
+}
+
 void loop() {
     auto dummy_value = 42;
     for (auto& s : SENSORS) s.update(dummy_value);

@@ -2,7 +2,17 @@
 
 enum { TemperatureThreashold = 22 };
 
-static auto TEMPERATURE = Sensor(A2);
+enum Sensors {
+    Temperature = A2,
+    Light = A1,
+    Potentiometer = A0,
+};
+
+static Sensor SENSORS[] = {
+    Sensor(Temperature, 'T'),
+    Sensor(Light, 'L'),
+    Sensor(Potentiometer, 'P'),
+};
 
 void setup() {
     Serial.begin(9600);
@@ -10,13 +20,14 @@ void setup() {
 }
 
 void loop() {
-    auto const voltage = TEMPERATURE.read();
-    auto const degreesC = ((50 * voltage) / 102) - 50;
-    Serial.println(degreesC);
-    if (degreesC > TemperatureThreashold) {
-        digitalWrite(5, HIGH);
-    } else {
-        digitalWrite(5, LOW);
+    for (auto& s : SENSORS) {
+        char buf[10] = {s.sensor_name, ':'};
+        sprintf(buf + 2, "%d\n", s.read());
+        /*
+        auto value = s.read();
+        char buf[] = {s.sensor_name, ':', (char) (value & 0xff), (char) ((value >> 8) & 0xff)};
+        */
+        Serial.print(buf);
     }
     delay(1);
 }

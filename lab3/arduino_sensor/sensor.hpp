@@ -21,8 +21,14 @@ class Sensor {
     u8 const pin;
 
   public:
-    constexpr explicit Sensor(u8 const pin)
-        : read_index{0}, total{0}, readings{}, pin{pin} {}
+    char const sensor_name;
+
+    constexpr explicit Sensor(u8 const pin, char const sensor_name)
+        : read_index{0},
+          total{0},
+          readings{},
+          pin{pin},
+          sensor_name{sensor_name} {}
 
     /**
      * Reads a value from the analog pin. Every 16 reads (or another value
