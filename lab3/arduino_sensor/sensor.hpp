@@ -13,17 +13,23 @@ constexpr auto integer_log(size_t const x) -> size_t {
 constexpr auto SHIFT = integer_log(SAMPLES);
 constexpr auto N_SAMPLES = 1 << SHIFT;
 
+enum Sensors: u8 {
+    Temperature = A2,
+    Light = A1,
+    Potentiometer = A0,
+};
+
 class Sensor {
   private:
     size_t read_index;
     u16 total;
     u16 readings[N_SAMPLES];
-    u8 const pin;
+    Sensors const pin;
 
   public:
     char const sensor_name;
 
-    constexpr explicit Sensor(u8 const pin, char const sensor_name)
+    constexpr explicit Sensor(Sensors const pin, char const sensor_name)
         : read_index{0},
           total{0},
           readings{},
