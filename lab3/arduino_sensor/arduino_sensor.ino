@@ -1,22 +1,23 @@
 #include "sensor.hpp"
 
-enum { TemperatureThreashold = 22 };
-
-static auto TEMPERATURE = Sensor(A2);
+static Sensor SENSORS[] = {
+    Sensor(Temperature, 'T'),
+    Sensor(Light, 'L'),
+    Sensor(Potentiometer, 'P'),
+};
 
 void setup() {
     Serial.begin(9600);
-    pinMode(5, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
-    auto const voltage = TEMPERATURE.read();
-    auto const degreesC = ((50 * voltage) / 102) - 50;
-    Serial.println(degreesC);
-    if (degreesC > TemperatureThreashold) {
-        digitalWrite(5, HIGH);
-    } else {
-        digitalWrite(5, LOW);
+    for (auto& s : SENSORS) {
+        auto value = s.read();
+        char buf[10];
+        buf[0] = s.sensor_name;
+        sprintf(buf + 1, "%hd\n", value);
+        Serial.print(buf);
     }
     delay(1);
 }
