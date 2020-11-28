@@ -20,9 +20,7 @@ class Api:
         self.url = url
 
     def getSensor(self, sensor):
-        print('requesting...', end='')
         response = requests.get(self.url + f'/{sensor}')
-        print(f'got {response.json()} from {sensor}')
         return response.json()['value']
 
     def setSensor(self, sensor, value):
@@ -53,10 +51,11 @@ class UARTConsole:
             raise serial.SerialException
         return self.ser.read_until()
 
-    def write(self, name, value):
-        print(f'writing: {name}:{value}')
-        msg = name.encode() + value.to_bytes(2, byteorder='little')
-        print(msg)
+    def write(self, current):
+        msg = bytearray()
+        for k in [TEMP, POTENTIOMETER, LIGHT]:
+            msg += current[k].to_bytes(2, byteorder='little')
+        print(' '.join(map(str, msg)))
         self.ser.write(msg)
 
 
@@ -108,23 +107,23 @@ def main(role='sensor'):
                 except Exception as e:
                     print(e)
         elif role == 'actuator':
-            potentiometer_current = None
-            light_current = None
-            temp_current = None
+            current = {POTENTIOMETER: 0, LIGHT: 0, TEMP: 0}
+
             while True:
-                potentiometer_read = api.getSensor(POTENTIOMETER)
-                if potentiometer_read != potentiometer_current:
-                    potentiometer_current = potentiometer_read
-                    uart.write('P', potentiometer_current)
-                light_read = api.getSensor(LIGHT)
-                if light_read != light_current:
-                    light_current = light_read
-                    uart.write('L', light_current)
-                temp_read = api.getSensor(TEMP)
-                if temp_read != temp_current:
-                    temp_current = temp_read
-                    uart.write('T', temp_current)
-                time.sleep(0.1)
+
+                def get_and_update(kind):
+                    read = api.getSensor(kind)
+                    if read != current[kind]:
+                        current[kind] = read
+                        return True
+                    return False
+
+                changed = (get_and_update(POTENTIOMETER)
+                           or get_and_update(LIGHT) or get_and_update(TEMP))
+
+                if changed:
+                    uart.write(current)
+
     except KeyboardInterrupt:
         exit(1)
 

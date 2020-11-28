@@ -64,3 +64,5 @@ _minted-*/
 *.snm
 *.vrb
 .env/
+
+main
