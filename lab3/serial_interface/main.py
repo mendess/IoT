@@ -12,7 +12,7 @@ TIMEOUT = 10
 POTENTIOMETER = 'potentiometer'
 LIGHT = 'light'
 TEMP = 'temp'
-URL = "https://iot-lab3.herokuapp.com"
+URL = "http://pasok.xyz:1807"
 
 
 class Api:
@@ -140,7 +140,10 @@ def main(role, uart):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     role = argv[1] if len(argv) > 1 else ROLE
     console = TTYConsole() if len(argv) > 2 and argv[2] == '-i' else UARTConsole()
     main(role, console)
-    if role == 'sensor': time.sleep(1) # wait for threads to send a few more values
+    if role == 'sensor':
+        logging.info('wait for threads to send a few more values')
+        time.sleep(1)

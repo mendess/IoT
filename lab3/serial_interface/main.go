@@ -170,6 +170,7 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 	}
 }
 
+// Mock an arduino, by reading stdin instead
 type Terminal struct{}
 
 func (Terminal) Write(p []byte) (n int, err error) {
