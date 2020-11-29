@@ -165,12 +165,6 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 				fmt.Printf("Failed to write %v Reason: %v\n", buffer, err)
 				return
 			}
-			// fmt.Print("Getting ack...")
-			// s, err := port.Read([]byte{0})
-			// if err != nil || s < 1 {
-			// 	fmt.Println("Failed to get ack")
-			// }
-			// fmt.Println("done")
 			copy(old[:], buffer[:])
 		}
 	}

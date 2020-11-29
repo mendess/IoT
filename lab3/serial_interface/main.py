@@ -13,6 +13,7 @@ POTENTIOMETER = 'potentiometer'
 LIGHT = 'light'
 TEMP = 'temp'
 URL = "https://iot-lab3.herokuapp.com"
+URL = "http://localhost:5000"
 
 
 class Api:
@@ -24,7 +25,7 @@ class Api:
         return response.json()['value']
 
     def setSensor(self, sensor, value):
-        print(f'sending {value} to {sensor}')
+        logging.info(f'sending {value} to {sensor}')
         response = requests.post(self.url + f'/{sensor}',
                                  json={'value': value})
         return response.status_code
@@ -32,6 +33,7 @@ class Api:
 
 class UARTConsole:
     def __init__(self):
+        logging.info('Opening serial port')
         self.ser = serial.Serial()  # open serial port
         self.ser.baudrate = BAUDRATE
         self.ser.port = DEVICE_PORT
@@ -55,8 +57,18 @@ class UARTConsole:
         msg = bytearray()
         for k in [TEMP, POTENTIOMETER, LIGHT]:
             msg += current[k].to_bytes(2, byteorder='little')
-        print(' '.join(map(str, msg)))
+        logging.info(' '.join(map(str, msg)))
         self.ser.write(msg)
+
+class TTYConsole:
+    def __del__(self):
+        pass
+
+    def read(self):
+        return input().encode('utf-8')
+
+    def write(self, current):
+        print(current)
 
 
 def infinite():
@@ -64,14 +76,12 @@ def infinite():
         yield None
 
 
-def main(role='sensor'):
+def main(role, uart):
     try:
-        print('Opening serial port')
-        uart = UARTConsole()
-        print('Connecting to api')
+        logging.info('Connecting to api')
         api = Api(URL)
-        print('Initialized')
-        print(f'Running as {role}')
+        logging.info('Initialized')
+        logging.info(f'Running as {role}')
         if role == 'sensor':
             sensor_values = {}
             sensor_values[POTENTIOMETER] = 0
@@ -84,13 +94,13 @@ def main(role='sensor'):
                     for _ in infinite()
                 ]
 
-            threading.Thread(target=send_sensor_value(POTENTIOMETER)).start()
-            threading.Thread(target=send_sensor_value(LIGHT)).start()
-            threading.Thread(target=send_sensor_value(TEMP)).start()
+            threading.Thread(target=send_sensor_value(POTENTIOMETER), daemon=True).start()
+            threading.Thread(target=send_sensor_value(LIGHT), daemon=True).start()
+            threading.Thread(target=send_sensor_value(TEMP), daemon=True).start()
             while True:
-                analog_read = uart.read()
-                if not analog_read: continue
                 try:
+                    analog_read = uart.read()
+                    if not analog_read: continue
                     name = chr(analog_read[0])
                     value = int(analog_read[1:].decode('utf-8').strip())
                     sensor = None
@@ -101,11 +111,13 @@ def main(role='sensor'):
                     elif name == 'T':
                         sensor = TEMP
                     else:
-                        print(f'Invalid {analog_read[0]}:{name}')
+                        logging.error(f'Invalid {analog_read[0]}:{name}')
                     if sensor:
                         sensor_values[sensor] = value
+                except EOFError:
+                    break
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
         elif role == 'actuator':
             current = {POTENTIOMETER: 0, LIGHT: 0, TEMP: 0}
 
@@ -129,4 +141,7 @@ def main(role='sensor'):
 
 
 if __name__ == "__main__":
-    main(role=(argv[1] if len(argv) > 1 else ROLE))
+    role = argv[1] if len(argv) > 1 else ROLE
+    console = TTYConsole() if len(argv) > 2 and argv[2] == '-i' else UARTConsole()
+    main(role, console)
+    if role == 'sensor': time.sleep(1) # wait for threads to send a few more values

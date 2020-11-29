@@ -18,5 +18,5 @@ curl \
     --header "Content-Type: application/json" \
     --request POST \
     --data "{\"value\": $2}" \
-    https://iot-lab3.herokuapp.com/$route
+    "${3:-https://iot-lab3.herokuapp.com}"/$route
 echo
