@@ -106,14 +106,16 @@ func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 	var buffer [PACKET_SIZE]byte
 	_, err := conn.Read(buffer[:])
 	if err != nil {
-		fmt.Println("Error getting current state")
+		fmt.Println("Error getting current state", err.Error())
 		return
 	}
 	fmt.Println("Read the initial state", buffer)
 	for {
 		line, err := bufReader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error reading from port")
+			if err != io.EOF {
+				fmt.Println("Error reading from port", err.Error())
+			}
 			break
 		}
 		switch line[0] {
@@ -126,7 +128,7 @@ func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 		}
 		_, err = conn.Write(buffer[:])
 		if err != nil {
-			fmt.Println("Error reading from server")
+			fmt.Println("Error reading from server", err.Error())
 			break
 		}
 	}
@@ -148,7 +150,12 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 	for {
 		_, err := conn.Read(buffer[:])
 		if err != nil {
-			fmt.Println("Error reading from server")
+			fmt.Println("Error reading from server", err.Error())
+			break
+		}
+		_, err = conn.Write([]byte{1})
+		if err != nil {
+			fmt.Println("Failed to write ack to server", err.Error())
 			break
 		}
 		if old != buffer {
@@ -158,13 +165,12 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 				fmt.Printf("Failed to write %v Reason: %v\n", buffer, err)
 				return
 			}
-			fmt.Print("Getting ack...")
-			s, err := port.Read([]byte{0})
-			if err != nil || s < 1 {
-				fmt.Println("Failed to get ack")
-				return
-			}
-			fmt.Println("done")
+			// fmt.Print("Getting ack...")
+			// s, err := port.Read([]byte{0})
+			// if err != nil || s < 1 {
+			// 	fmt.Println("Failed to get ack")
+			// }
+			// fmt.Println("done")
 			copy(old[:], buffer[:])
 		}
 	}
@@ -173,7 +179,12 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 type Terminal struct{}
 
 func (Terminal) Write(p []byte) (n int, err error) {
-	return os.Stdout.Write(p)
+	s := fmt.Sprintf(">> %d:%d:%d\n",
+		binary.LittleEndian.Uint16(p[0:2]),
+		binary.LittleEndian.Uint16(p[2:4]),
+		binary.LittleEndian.Uint16(p[4:6]),
+	)
+	return os.Stdout.Write([]byte(s))
 }
 
 func (Terminal) Read(p []byte) (n int, err error) {

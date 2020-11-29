@@ -101,6 +101,10 @@ func handleActuator(conn net.Conn) {
 			fmt.Println("Actuator disconnecting: ", err.Error())
 			break
 		}
+		s, err := conn.Read([]byte{1})
+		if err != nil || s < 0 {
+			fmt.Println("Failed to get ack")
+		}
 	}
 }
 

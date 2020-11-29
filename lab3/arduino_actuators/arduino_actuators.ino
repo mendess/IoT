@@ -46,17 +46,16 @@ struct Message {
 
 using Message = struct Message;
 
-enum class ReadResult { Ok, NoBytesAvailable, ReadLessThanExpected };
+constexpr byte ACK = 'A';
 
-constexpr byte ACK = 1;
-
-auto read_serial(Message* msg) -> ReadResult {
+auto read_serial(Message* msg) -> bool {
     byte buf[NUM_SENSORS * 2];
     if (!Serial.available()) {
-        return ReadResult::NoBytesAvailable;
+        return false;
     }
-    if (Serial.readBytes(buf, sizeof buf) < sizeof buf) {
-        return ReadResult::ReadLessThanExpected;
+    size_t read_so_far = 0;
+    while (read_so_far != sizeof buf) {
+        read_so_far += Serial.readBytes(buf, sizeof(buf) - read_so_far);
     }
     Serial.write(&ACK, sizeof ACK);
     *msg = (Message){
@@ -65,7 +64,7 @@ auto read_serial(Message* msg) -> ReadResult {
             buf[2] | ((u16) buf[3]) << 8,
             buf[4] | ((u16) buf[5]) << 8,
         }};
-    return ReadResult::Ok;
+    return true;
 }
 
 void setup() {
@@ -79,9 +78,9 @@ void bbbbblink(u32 x) {
     delay(500);
     for (u32 i = 0; i < x; i++) {
         digitalWrite(LED_BUILTIN, 0);
-        delay(500);
+        delay(200);
         digitalWrite(LED_BUILTIN, 1);
-        delay(500);
+        delay(200);
     }
     digitalWrite(LED_BUILTIN, 0);
 }
@@ -89,21 +88,9 @@ void bbbbblink(u32 x) {
 static Message msg = {0};
 
 void loop() {
-    auto r = read_serial(&msg);
-    switch (r) {
-        case ReadResult::Ok: {
-            for (size_t i = 0; i < NUM_SENSORS; ++i)
-                SENSORS[i].update(msg.values[i]);
-
-            break;
-        }
-        case ReadResult::NoBytesAvailable: {
-            break;
-        }
-        case ReadResult::ReadLessThanExpected: {
-            bbbbblink(3);
-            break;
-        }
+    if (read_serial(&msg)) {
+        for (size_t i = 0; i < NUM_SENSORS; ++i)
+            SENSORS[i].update(msg.values[i]);
     }
     blink_potentiometer();
     delay(1);
