@@ -32,6 +32,8 @@ func main() {
 	var port string
 	if len(os.Args) > 1 {
 		port = os.Args[1]
+	} else if p := os.Getenv("PORT"); p != "" {
+		port = p
 	} else {
 		port = DEFAULT_PORT
 	}
@@ -40,6 +42,7 @@ func main() {
 		fmt.Println("Error listening: ", err.Error())
 		os.Exit(1)
 	}
+	fmt.Printf("Listening on 0.0.0.0:%s\n", port)
 	defer l.Close()
 	for {
 		conn, err := l.Accept()

@@ -13,7 +13,6 @@ POTENTIOMETER = 'potentiometer'
 LIGHT = 'light'
 TEMP = 'temp'
 URL = "https://iot-lab3.herokuapp.com"
-URL = "http://localhost:5000"
 
 
 class Api:
