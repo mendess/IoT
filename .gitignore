@@ -64,3 +64,6 @@ _minted-*/
 *.snm
 *.vrb
 .env/
+__pycache__
+
+main

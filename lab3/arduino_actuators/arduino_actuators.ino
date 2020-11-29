@@ -2,7 +2,7 @@
 
 enum { TemperatureThreshold = 28 };
 
-void yellow(Led led, u16 voltage) {
+void temperature(Led led, u16 voltage) {
     auto degreesC = (((voltage / 1024.0) * 5.0) - 0.5) * 100.0;
     if (degreesC > TemperatureThreshold) {
         digitalWrite(led, HIGH);
@@ -11,62 +11,59 @@ void yellow(Led led, u16 voltage) {
     }
 }
 
-void red(Led led, u16 voltage) {
+void light(Led led, u16 voltage) {
     analogWrite(led, map(voltage, 1, 1021, 255, 0));
 }
 
-static u32 half_blink_interval;
+static u32 half_blink_interval = 100;
 
-void green(Led led, u16 voltage) {
+void potentiometer(Led led, u16 voltage) {
     (void) led;
     half_blink_interval = map(voltage, 0, 1023, 100, 1000);
 }
 
-void blink_green() {
+void blink_potentiometer() {
     static u32 last_blink_time = 0UL;
     static bool led_on = false;
 
     u32 const now = millis();
     if (last_blink_time + half_blink_interval < now) {
-        digitalWrite(Green, led_on);
-        led_on = !led_on;
+        digitalWrite(Green, led_on = !led_on);
         last_blink_time = now;
     }
 }
 
-constexpr Actuator SENSORS[] = {
-    Actuator(Yellow, yellow), Actuator(Red, red), Actuator(Green, green)};
+#define NUM_SENSORS 3
+
+constexpr Actuator SENSORS[NUM_SENSORS] = {
+    Actuator(Yellow, temperature),
+    Actuator(Green, potentiometer),
+    Actuator(Red, light)};
 
 struct Message {
-    size_t actuator;
-    u16 value;
-    constexpr Message(): actuator{0}, value{0} {}
-    constexpr Message(size_t a, u16 v): actuator{a}, value{v} {}
+    u16 values[NUM_SENSORS];
 };
 
 using Message = struct Message;
 
-bool read_serial(Message* msg) {
-    byte buf[3];
-    if (!Serial.available() || Serial.readBytes(buf, sizeof buf) < 3) {
+constexpr byte ACK = 'A';
+
+auto read_serial(Message* msg) -> bool {
+    byte buf[NUM_SENSORS * 2];
+    if (!Serial.available()) {
         return false;
     }
-    u16 v = buf[2];
-    v <<= 8;
-    v |= buf[1];
-    switch (*buf) {
-        case 'T':
-            *msg = {0, v};
-            break;
-        case 'L':
-            *msg = {1, v};
-            break;
-        case 'P':
-            *msg = {2, v};
-            break;
-        default:
-            return false;
+    size_t read_so_far = 0;
+    while (read_so_far != sizeof buf) {
+        read_so_far += Serial.readBytes(buf, sizeof(buf) - read_so_far);
     }
+    Serial.write(&ACK, sizeof ACK);
+    *msg = (Message){
+        .values = {
+            buf[0] | ((u16) buf[1]) << 8,
+            buf[2] | ((u16) buf[3]) << 8,
+            buf[4] | ((u16) buf[5]) << 8,
+        }};
     return true;
 }
 
@@ -76,8 +73,25 @@ void setup() {
     Serial.begin(9600);
 }
 
+void bbbbblink(u32 x) {
+    digitalWrite(LED_BUILTIN, 1);
+    delay(500);
+    for (u32 i = 0; i < x; i++) {
+        digitalWrite(LED_BUILTIN, 0);
+        delay(200);
+        digitalWrite(LED_BUILTIN, 1);
+        delay(200);
+    }
+    digitalWrite(LED_BUILTIN, 0);
+}
+
+static Message msg = {0};
+
 void loop() {
-    Message msg;
-    if (read_serial(&msg)) SENSORS[msg.actuator].update(msg.value);
-    blink_green();
+    if (read_serial(&msg)) {
+        for (size_t i = 0; i < NUM_SENSORS; ++i)
+            SENSORS[i].update(msg.values[i]);
+    }
+    blink_potentiometer();
+    delay(1);
 }
