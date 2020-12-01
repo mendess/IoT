@@ -9,8 +9,10 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/signal"
 	"strconv"
-	// "strings"
+	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -70,6 +72,14 @@ func main() {
 	} else {
 		port = openSerial()
 	}
+	sig_chan := make(chan os.Signal, 1)
+	signal.Notify(sig_chan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
+	go func() {
+		<-sig_chan
+		fmt.Println("Signal received, shutting down")
+		conn.Close()
+		os.Exit(0)
+	}()
 	switch options.Mode {
 	case "sensor":
 		handleSensor(conn, port)
@@ -147,6 +157,7 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 	defer port.Close()
 	var buffer [PACKET_SIZE]byte
 	var old [PACKET_SIZE]byte
+	first_write := true
 	for {
 		_, err := conn.Read(buffer[:])
 		if err != nil {
@@ -164,6 +175,15 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 			if err != nil {
 				fmt.Printf("Failed to write %v Reason: %v\n", buffer, err)
 				return
+			}
+			if first_write {
+				time.Sleep(2 * time.Second)
+				_, err = port.Write(buffer[:])
+				if err != nil {
+					fmt.Printf("Failed to make backup write %v Reason: %v\n", buffer, err)
+					return
+				}
+				first_write = false
 			}
 			copy(old[:], buffer[:])
 		}

@@ -3,12 +3,9 @@
 enum { TemperatureThreshold = 28 };
 
 void temperature(Led led, u16 voltage) {
-    auto degreesC = (((voltage / 1024.0) * 5.0) - 0.5) * 100.0;
-    if (degreesC > TemperatureThreshold) {
-        digitalWrite(led, HIGH);
-    } else {
-        digitalWrite(led, LOW);
-    }
+    auto degreesC = ((500 * (u32) voltage) >> 10) - 50;
+    auto w = degreesC > TemperatureThreshold ? HIGH : LOW;
+    digitalWrite(led, w);
 }
 
 void light(Led led, u16 voltage) {
@@ -40,30 +37,18 @@ constexpr Actuator SENSORS[NUM_SENSORS] = {
     Actuator(Green, potentiometer),
     Actuator(Red, light)};
 
-struct Message {
-    u16 values[NUM_SENSORS];
-};
-
-using Message = struct Message;
-
-constexpr byte ACK = 'A';
-
-auto read_serial(Message* msg) -> bool {
+auto read_serial(u16* msg) -> bool {
     byte buf[NUM_SENSORS * 2];
-    if (!Serial.available()) {
-        return false;
-    }
+    if (!Serial.available()) return false;
+
     size_t read_so_far = 0;
-    while (read_so_far != sizeof buf) {
-        read_so_far += Serial.readBytes(buf, sizeof(buf) - read_so_far);
-    }
-    Serial.write(&ACK, sizeof ACK);
-    *msg = (Message){
-        .values = {
-            buf[0] | ((u16) buf[1]) << 8,
-            buf[2] | ((u16) buf[3]) << 8,
-            buf[4] | ((u16) buf[5]) << 8,
-        }};
+    while (read_so_far != sizeof buf)
+        read_so_far +=
+            Serial.readBytes(buf + read_so_far, sizeof(buf) - read_so_far);
+
+    msg[0] = buf[0] | ((u16) buf[1]) << 8;
+    msg[1] = buf[2] | ((u16) buf[3]) << 8;
+    msg[2] = buf[4] | ((u16) buf[5]) << 8;
     return true;
 }
 
@@ -73,25 +58,11 @@ void setup() {
     Serial.begin(9600);
 }
 
-void bbbbblink(u32 x) {
-    digitalWrite(LED_BUILTIN, 1);
-    delay(500);
-    for (u32 i = 0; i < x; i++) {
-        digitalWrite(LED_BUILTIN, 0);
-        delay(200);
-        digitalWrite(LED_BUILTIN, 1);
-        delay(200);
-    }
-    digitalWrite(LED_BUILTIN, 0);
-}
-
-static Message msg = {0};
+static u16 msg[NUM_SENSORS];
 
 void loop() {
-    if (read_serial(&msg)) {
-        for (size_t i = 0; i < NUM_SENSORS; ++i)
-            SENSORS[i].update(msg.values[i]);
-    }
+    if (read_serial(msg))
+        for (size_t i = 0; i < NUM_SENSORS; ++i) SENSORS[i].update(msg[i]);
     blink_potentiometer();
     delay(1);
 }
