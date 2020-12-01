@@ -1,0 +1,95 @@
+\documentclass[10pt]{article}
+\usepackage[portuguese]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{minted}
+\usepackage{geometry}
+\geometry{%
+    a4paper,
+    total={150mm,257mm},
+}
+\usepackage{hyperref}
+\hypersetup{%
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\setlength{\arrayrulewidth}{0.3mm}
+\setlength{\tabcolsep}{10pt}
+% \setlength{\parindent}{0em}
+\renewcommand{\arraystretch}{1.5}
+% \renewcommand{\thesection}{}
+% \renewcommand{\thesubsection}{}
+% \renewcommand{\thesubsubsection}{}
+
+\begin{document}
+\begin{center}
+    {\scshape Instituto Superior Técnico\par}
+    \vspace{1cm}
+    {\scshape\Large Applications and Computation for the Internet of Things\par}
+    \vspace{1.5cm}
+\end{center}
+{\scshape\LARGE 3\textsuperscript{st} Lab Work: Internet of Sensors and Actuators}
+\\
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|l|p{10cm}|}
+        \hline
+        \multicolumn{3}{|l|}{Group: 12} \\[1.5ex] \hline
+        Student 1 & 98380 & Dominika Florczykowska \\ [1.5ex]\hline
+        Student 2 & 97144 & Pedro Mendes \\ [1.5ex]\hline
+    \end{tabular}
+\end{table}
+
+\section{Results:}
+
+\subsection{Describe the changes in the program developed in lab 2 (Sensing the
+Real World) to port it to the new configuration with two controlers}
+
+\subsubsection{Describe any changes in the design pattern (such as changing
+tasks in the round-robin loop)}
+
+
+\subsubsection{Describe other implementation issues changed (implementation of
+tasks)}
+
+\subsection{Controler \#1 program --- I2C master:}
+
+\inputminted{cpp}{../arduino_sensor/sensor.hpp}
+
+\inputminted[firstline=2]{cpp}{../arduino_sensor/arduino_sensor.ino}
+
+
+\subsection{Controler \#2 program --- I2C slave:}
+
+\inputminted{cpp}{../arduino_actuators/actuators.hpp}
+
+\inputminted[firstline=2]{cpp}{../arduino_actuators/arduino_actuators.ino}
+
+\subsection{PC \#1 and \#2 configuration and programs:}
+
+\inputminted{go}{../serial_interface/main.go}
+
+\subsection{Evaluate the performance of the communication link}
+
+\subsubsection{controller \#1 $\rightarrow$ PC 1 $\rightarrow$ Internet
+$\rightarrow$ PC2 $\rightarrow$ contoller \# 2}
+
+
+\subsection{Design interfaces to detect failures of the LEDs and signal these
+occurences at the sensors side. (Consider that when a LED fails it behaves as an
+open-circuit.)}
+
+\subsubsection{Draw the circuits}
+
+\subsubsection{Program de detection}
+
+\subsubsection{Describe any changes required in the communication interfaces}
+
+
+\end{document}
