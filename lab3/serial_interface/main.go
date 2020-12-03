@@ -22,7 +22,7 @@ const (
 )
 
 const DUMMY uint16 = 42
-const PACKET_SIZE = 3 * unsafe.Sizeof(DUMMY)
+const PACKET_SIZE = 4 * unsafe.Sizeof(DUMMY)
 
 type Options struct {
 	Host string
@@ -136,8 +136,8 @@ func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 		case 'L':
 			parseToSlice(line[1:(len(line)-1)], buffer[4:6])
 		}
-		_, err = conn.Write(buffer[:])
-		if err != nil {
+		buffer[len(buffer)-1] = 4
+		if err := write_until(conn, buffer[:]); err != nil {
 			fmt.Println("Error reading from server", err.Error())
 			break
 		}
@@ -147,10 +147,22 @@ func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 func parseToSlice(s string, slice []byte) {
 	v, err := strconv.Atoi(s)
 	if err != nil {
-		fmt.Printf("Error converting value from string: '%s'", s)
+		fmt.Printf("Error converting value from string: '%s'\n", s)
 	} else {
 		binary.LittleEndian.PutUint16(slice, uint16(v))
 	}
+}
+
+func write_until(w io.Writer, buf []byte) error {
+	written_so_far := 0
+	for written_so_far < len(buf) {
+		n, err := w.Write(buf[written_so_far:])
+		if err == nil {
+			return err
+		}
+		written_so_far += n
+	}
+	return nil
 }
 
 func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
@@ -158,20 +170,19 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 	var buffer [PACKET_SIZE]byte
 	var old [PACKET_SIZE]byte
 	first_write := true
+	go detect_errors(conn, port)
 	for {
-		_, err := conn.Read(buffer[:])
-		if err != nil {
+		if err := read_until(conn, buffer[:]); err != nil {
 			fmt.Println("Error reading from server", err.Error())
 			break
 		}
-		_, err = conn.Write([]byte{1})
-		if err != nil {
-			fmt.Println("Failed to write ack to server", err.Error())
-			break
+		if buffer[len(buffer)-1] != 4 {
+			// fmt.Println("Invalid packet")
+			continue
 		}
 		if old != buffer {
 			fmt.Printf("Writing %v\n", buffer)
-			_, err = port.Write(buffer[:])
+			_, err := port.Write(buffer[:])
 			if err != nil {
 				fmt.Printf("Failed to write %v Reason: %v\n", buffer, err)
 				return
@@ -180,7 +191,11 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 				time.Sleep(2 * time.Second)
 				_, err = port.Write(buffer[:])
 				if err != nil {
-					fmt.Printf("Failed to make backup write %v Reason: %v\n", buffer, err)
+					fmt.Printf(
+						"Failed to make backup write %v Reason: %v\n",
+						buffer,
+						err,
+					)
 					return
 				}
 				first_write = false
@@ -188,6 +203,46 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 			copy(old[:], buffer[:])
 		}
 	}
+}
+
+func detect_errors(conn net.Conn, port io.ReadWriteCloser) {
+	var buf [1]byte
+	for {
+		n, err := port.Read(buf[:])
+		switch err {
+		case io.EOF:
+			fmt.Println("Terminating error detection")
+			return
+		case nil:
+		default:
+			fmt.Printf("Error reading '%v'\n", err)
+			continue
+		}
+		switch buf[0] {
+		case 5:
+			fmt.Println("Yellow led failed")
+		case 9:
+			fmt.Println("Red led failed")
+		case 11:
+			fmt.Println("Green led failed")
+		default:
+			if n > 0 {
+				fmt.Printf("Invalid byte received %v\n", buf[0])
+			}
+		}
+	}
+}
+
+func read_until(r io.Reader, buf []byte) error {
+	read_so_far := 0
+	for read_so_far < len(buf) {
+		n, err := r.Read(buf[read_so_far:])
+		if err == nil {
+			return err
+		}
+		read_so_far += n
+	}
+	return nil
 }
 
 // Mock an arduino, by reading stdin instead

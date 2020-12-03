@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"sync"
@@ -12,7 +13,7 @@ import (
 
 const (
 	DEFAULT_PORT = "80"
-	PACKET_SIZE  = 3 * unsafe.Sizeof(uint16(42))
+	PACKET_SIZE  = 4 * unsafe.Sizeof(uint16(42))
 )
 
 type Values struct {
@@ -99,12 +100,23 @@ func handleActuator(conn net.Conn) {
 		READ_MUTEX.Lock()
 		var bytes = *READ_VALUES
 		READ_MUTEX.Unlock()
-		_, err := conn.Write(bytes.Bytes[:])
-		if err != nil {
+		if err := write_until(conn, bytes.Bytes[:]); err != nil {
 			fmt.Println("Actuator disconnecting: ", err.Error())
 			break
 		}
 	}
+}
+
+func write_until(w io.Writer, buf []byte) error {
+	written_so_far := 0
+	for written_so_far < len(buf) {
+		n, err := w.Write(buf[written_so_far:])
+		written_so_far += n
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func swap_pointers() {
@@ -120,11 +132,12 @@ func printState() {
 		time.Sleep(5 * time.Second)
 		bytes := &READ_VALUES.Bytes
 		fmt.Printf(
-			"bytes: %v | T%d | P%d | L%d\n",
+			"bytes: %v | T%d | P%d | L%d | C%d\n",
 			bytes,
 			binary.LittleEndian.Uint16(bytes[0:2]),
 			binary.LittleEndian.Uint16(bytes[2:4]),
 			binary.LittleEndian.Uint16(bytes[4:6]),
+			binary.LittleEndian.Uint16(bytes[6:8]),
 		)
 	}
 }

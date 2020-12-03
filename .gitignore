@@ -69,3 +69,4 @@ __pycache__
 main
 lab3/serial_interface/serial_interface
 lab3/relay_server/relay_server
+lab3/relay_server/relay
