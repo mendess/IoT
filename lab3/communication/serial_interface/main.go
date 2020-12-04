@@ -56,7 +56,7 @@ func main() {
 	} else {
 		port = openSerial()
 	}
-	setup_signal_handling(conn)
+	go handle_signals(conn)
 	switch options.Mode {
 	case "sensor":
 		handleSensor(conn, port)
@@ -87,15 +87,13 @@ func openSerial() io.ReadWriteCloser {
 	return port
 }
 
-func setup_signal_handling(conn io.Closer) {
+func handle_signals(conn io.Closer) {
 	sig_chan := make(chan os.Signal, 1)
 	signal.Notify(sig_chan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
-	go func() {
-		<-sig_chan
-		fmt.Println("Signal received, shutting down")
-		conn.Close()
-		os.Exit(0)
-	}()
+	<-sig_chan
+	fmt.Println("Signal received, shutting down")
+	conn.Close()
+	os.Exit(0)
 }
 
 // Mock an arduino, by reading stdin and writting to stdout instead

@@ -12,12 +12,6 @@ void read_errors() {
         while (Serial.readBytes(err, sizeof err) < 1)
             ;
         digitalWrite(*err, HIGH);
-        for(byte i = 0; i < *err; ++i) {
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(100);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(100);
-        }
     }
 }
 
@@ -38,5 +32,4 @@ void loop() {
         Serial.print(buf);
     }
     read_errors();
-    delay(1);
 }

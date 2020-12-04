@@ -1,19 +1,8 @@
 #include "config.hpp"
 
-#ifndef SAMPLES
-#    define SAMPLES 16
+#ifndef N_SAMPLES
+#    define N_SAMPLES 16
 #endif
-
-constexpr auto integer_log_recurse(size_t const x, size_t const i) -> size_t {
-    return x > 1 ? integer_log_recurse(x >> 1, i + 1) : i;
-}
-
-constexpr auto integer_log(size_t const x) -> size_t {
-    return integer_log_recurse(x, 0);
-}
-
-constexpr auto SHIFT = integer_log(SAMPLES);
-constexpr auto N_SAMPLES = 1 << SHIFT;
 
 class Sensor {
   private:

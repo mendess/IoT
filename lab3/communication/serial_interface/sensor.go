@@ -17,7 +17,7 @@ func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 	err := util.ReadToEnd(conn, buffer[:])
 	if err != nil {
 		fmt.Println("Error getting current state", err.Error())
-		return
+		buffer = util.MakePacket()
 	}
 	fmt.Println("Read the initial state", buffer)
 	go report_errors(conn, port)
@@ -37,7 +37,6 @@ func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 		case 'L':
 			parseToSlice(line[1:(len(line)-1)], buffer[4:6])
 		}
-		buffer[len(buffer)-1] = 4
 		if err := util.WriteToEnd(conn, buffer[:]); err != nil {
 			fmt.Println("Error reading from server", err.Error())
 			break

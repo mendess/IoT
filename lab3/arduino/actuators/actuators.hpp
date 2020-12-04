@@ -18,7 +18,7 @@ class Actuator {
 
     void checked_analog_write(u8 value) const {
         analogWrite(led, value);
-        /* if (value > 0) test_and_report(value); */
+        if (value > 0) test_and_report(1);
     }
 
   private:

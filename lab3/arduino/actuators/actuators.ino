@@ -5,7 +5,7 @@ enum { TemperatureThreshold = 28 };
 /* Update state functions */
 
 void temperature(Actuator const& self, u16 voltage) {
-    int32_t degreesC = ((500 * (uint32_t) voltage) >> 10) - 50;
+    int32_t degreesC = ((500 * (int32_t) voltage) >> 10) - 50;
     auto w = degreesC > TemperatureThreshold ? HIGH : LOW;
     self.checked_digital_write(w);
 }
@@ -71,5 +71,4 @@ void loop() {
         for (size_t i = 0; i < NUM_SENSORS; ++i) SENSORS[i].update(msg[i]);
     }
     blink_potentiometer(SENSORS[1]);
-    delay(1);
 }

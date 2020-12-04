@@ -20,7 +20,6 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 			break
 		}
 		if !util.IsPacketValid(buffer) {
-			// fmt.Println("Invalid packet")
 			continue
 		}
 		if old != buffer {
