@@ -44,7 +44,7 @@ constexpr Actuator SENSORS[NUM_SENSORS] = {
     Actuator(Potentiometer, potentiometer),
     Actuator(Light, light)};
 
-//** Try to read from the serial port into `msg`
+/** Try to read from the serial port into `msg` */
 auto read_serial(u16* msg) -> bool {
     byte buf[(NUM_SENSORS + 1) * 2];
     if (!Serial.available()) return false;
