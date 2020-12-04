@@ -6,6 +6,7 @@ static Sensor SENSORS[] = {
     Sensor(Potentiometer, 'P'),
 };
 
+/** Check for errors comming from the actuator side */
 void read_errors() {
     if (Serial.available()) {
         byte err[1];

@@ -1,5 +1,6 @@
 #include "config.hpp"
 
+// WARNING: This value must be a power of 2
 #ifndef N_SAMPLES
 #    define N_SAMPLES 16
 #endif
@@ -25,7 +26,7 @@ class Sensor {
 
     /**
      * Reads a value from the analog pin. Every 16 reads (or another value
-     *  defined by SAMPLES) the passed handler is called with the averaged out
+     *  defined by N_SAMPLES) the passed handler is called with the averaged out
      *  value.
      *
      * @param value_handler A handler for the value
@@ -44,6 +45,9 @@ class Sensor {
         return total / N_SAMPLES;
     }
 
+    /**
+     * Sets up the error indicator led of this sensor
+     */
     void setup() {
         pinMode(led, OUTPUT);
     }
