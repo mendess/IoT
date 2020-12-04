@@ -1,9 +1,9 @@
 package main
 
 import (
+	"communication/util"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"sync"
@@ -45,6 +45,7 @@ func main() {
 	}
 	fmt.Printf("Listening on 0.0.0.0:%s\n", port)
 	defer l.Close()
+	error_channel := make(chan byte, 512)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -63,60 +64,95 @@ func main() {
 		case kind == "sensor" && !HAS_SENSOR:
 			HAS_SENSOR = true
 			fmt.Println("Sensor connected")
-			go handleSensor(conn)
+			go handleSensor(conn, error_channel)
 		case kind == "actuator" && !HAS_ACTUATOR:
 			HAS_ACTUATOR = true
 			fmt.Println("Actuator connected")
-			go handleActuator(conn)
+			go handleActuator(conn, error_channel)
 		default:
-			fmt.Println("Invalid type", kind)
-			conn.Write([]byte{0})
+			fmt.Println("Invalid type or already has one connected", kind)
+			fmt.Println("Has sensor: ", HAS_SENSOR)
+			fmt.Println("Has actuator: ", HAS_ACTUATOR)
+			if err := util.WriteToEnd(conn, []byte{0}); err != nil {
+				fmt.Println("Couldn't send rejection byte")
+			}
 			conn.Close()
 		}
 	}
 }
 
-func handleSensor(conn net.Conn) {
+func handleSensor(conn net.Conn, error_channel chan byte) {
 	defer conn.Close()
 	defer func() { HAS_SENSOR = false }()
-	conn.Write([]byte{1})
+	if err := util.WriteToEnd(conn, []byte{1}); err != nil {
+		fmt.Println("Couldn't send confirmation byte")
+		return
+	}
 	bytes := READ_VALUES
-	conn.Write(bytes.Bytes[:])
+	if err := util.WriteToEnd(conn, bytes.Bytes[:]); err != nil {
+		fmt.Println("Failed to write initial state, continuing..")
+	}
+	quit := false
+	go receive_errors(conn, error_channel, &quit)
 	for {
-		_, err := conn.Read(WRITE_VALUES.Bytes[:])
-		if err != nil {
+		if err := util.ReadToEnd(conn, WRITE_VALUES.Bytes[:]); err != nil {
 			fmt.Println("Sensor disconnecting: ", err.Error())
-			break
+			quit = true
+			HAS_SENSOR = false
+			return
 		}
 		swap_pointers()
 	}
 }
 
-func handleActuator(conn net.Conn) {
-	defer conn.Close()
-	defer func() { HAS_ACTUATOR = false }()
-	conn.Write([]byte{1})
+func receive_errors(conn net.Conn, error_channel chan byte, quit *bool) {
 	for {
-		READ_MUTEX.Lock()
-		var bytes = *READ_VALUES
-		READ_MUTEX.Unlock()
-		if err := write_until(conn, bytes.Bytes[:]); err != nil {
-			fmt.Println("Actuator disconnecting: ", err.Error())
-			break
+		select {
+		case err := <-error_channel:
+			fmt.Println("Receiving error", err)
+			util.WriteToEnd(conn, []byte{err})
+		default:
+			if *quit {
+				fmt.Println("receive_errors stopping")
+				return
+			}
 		}
 	}
 }
 
-func write_until(w io.Writer, buf []byte) error {
-	written_so_far := 0
-	for written_so_far < len(buf) {
-		n, err := w.Write(buf[written_so_far:])
-		written_so_far += n
-		if err != nil {
-			return err
+func handleActuator(conn net.Conn, error_channel chan byte) {
+	defer conn.Close()
+	defer func() { HAS_ACTUATOR = false }()
+	if err := util.WriteToEnd(conn, []byte{1}); err != nil {
+		fmt.Println("Couldn't send confirmation byte")
+		return
+	}
+	go send_errors(conn, error_channel)
+	for {
+		READ_MUTEX.Lock()
+		var bytes = *READ_VALUES
+		READ_MUTEX.Unlock()
+		if err := util.WriteToEnd(conn, bytes.Bytes[:]); err != nil {
+			fmt.Println("Actuator disconnecting: ", err.Error())
+			HAS_ACTUATOR = false
+			return
 		}
 	}
-	return nil
+}
+
+func send_errors(conn net.Conn, error_channel chan byte) {
+	var buf [1]byte
+	for {
+		if n, err := conn.Read(buf[:]); err != nil {
+			return
+		} else if n == len(buf) {
+			fmt.Println("Sending error", buf[0])
+			select {
+			case error_channel <- buf[0]:
+			default:
+			}
+		}
+	}
 }
 
 func swap_pointers() {

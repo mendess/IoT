@@ -37,9 +37,9 @@ void blink_potentiometer(Actuator const& self) {
 #define NUM_SENSORS 3
 
 constexpr Actuator SENSORS[NUM_SENSORS] = {
-    Actuator(Yellow, A2, temperature),
-    Actuator(Green, A0, potentiometer),
-    Actuator(Red, A1, light)};
+    Actuator(Temperature, temperature),
+    Actuator(Potentiometer, potentiometer),
+    Actuator(Light, light)};
 
 auto read_serial(u16* msg) -> bool {
     byte buf[(NUM_SENSORS + 1) * 2];
