@@ -43,7 +43,6 @@
 *.pdb
 
 # Kernel Module Compile Results
-*.mod*
 *.cmd
 .tmp_versions/
 modules.order
@@ -67,6 +66,5 @@ _minted-*/
 __pycache__
 
 main
-lab3/serial_interface/serial_interface
-lab3/relay_server/relay_server
-lab3/relay_server/relay
+lab3/communication/relay_server/relay_server
+lab3/communication/serial_interface/serial_interface
