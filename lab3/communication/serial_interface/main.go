@@ -105,7 +105,7 @@ func (Terminal) Write(p []byte) (n int, err error) {
 	var s string
 	if len(p) == 1 {
 		s = fmt.Sprintf("Led failed %d\n", p[0])
-	} else if len(p) == int(util.PACKET_SIZE) {
+	} else if len(p) == int(util.PacketSize) {
 		s = fmt.Sprintf(">> %d:%d:%d\n",
 			binary.LittleEndian.Uint16(p[0:2]),
 			binary.LittleEndian.Uint16(p[2:4]),

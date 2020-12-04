@@ -10,8 +10,8 @@ import (
 
 func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 	defer port.Close()
-	var buffer [util.PACKET_SIZE]byte
-	var old [util.PACKET_SIZE]byte
+	buffer := util.MakeEmptyPacket()
+	old := util.MakeEmptyPacket()
 	first_write := true
 	go detect_errors(conn, port)
 	for {
@@ -19,7 +19,7 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
 			fmt.Println("Error reading from server", err.Error())
 			break
 		}
-		if buffer[len(buffer)-1] != 4 {
+		if !util.IsPacketValid(buffer) {
 			// fmt.Println("Invalid packet")
 			continue
 		}

@@ -7,8 +7,25 @@ import (
 	"unsafe"
 )
 
-const DUMMY uint16 = 42
-const PACKET_SIZE = 4 * unsafe.Sizeof(DUMMY)
+const PacketSize = 4 * unsafe.Sizeof(uint16(0))
+
+type packet = [PacketSize]byte
+
+func MakePacket() packet {
+	p := MakeEmptyPacket()
+	p[len(p)-1] = 4
+	p[len(p)-2] = 0xff
+	return p
+}
+
+func MakeEmptyPacket() packet {
+	var p packet
+	return p
+}
+
+func IsPacketValid(p packet) bool {
+	return p[len(p)-1] == 4 && p[len(p)-2] == 0xff
+}
 
 const (
 	YELLOW_LED = 5

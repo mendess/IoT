@@ -50,7 +50,7 @@ auto read_serial(u16* msg) -> bool {
         read_so_far +=
             Serial.readBytes(buf + read_so_far, sizeof(buf) - read_so_far);
 
-    if (buf[sizeof(buf) - 1] != 4) return false;
+    if (buf[sizeof(buf) - 1] != 4 || buf[sizeof(buf) - 2] != 0xff) return false;
 
 
     msg[0] = buf[0] | ((u16) buf[1]) << 8;

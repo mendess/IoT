@@ -8,22 +8,16 @@ import (
 	"os"
 	"sync"
 	"time"
-	"unsafe"
 )
 
 const (
 	DEFAULT_PORT = "80"
-	PACKET_SIZE  = 4 * unsafe.Sizeof(uint16(42))
 )
 
-type Values struct {
-	Bytes [PACKET_SIZE]byte
-}
-
-var VALUES1 Values
-var VALUES2 Values
-var READ_VALUES *Values = &VALUES1
-var WRITE_VALUES *Values = &VALUES2
+var VALUES1 = util.MakePacket()
+var VALUES2 = util.MakePacket()
+var READ_VALUES = &VALUES1
+var WRITE_VALUES = &VALUES2
 var READ_MUTEX sync.Mutex
 var HAS_SENSOR bool
 var HAS_ACTUATOR bool
@@ -89,13 +83,13 @@ func handleSensor(conn net.Conn, error_channel chan byte) {
 		return
 	}
 	bytes := READ_VALUES
-	if err := util.WriteToEnd(conn, bytes.Bytes[:]); err != nil {
+	if err := util.WriteToEnd(conn, bytes[:]); err != nil {
 		fmt.Println("Failed to write initial state, continuing..")
 	}
 	quit := false
 	go receive_errors(conn, error_channel, &quit)
 	for {
-		if err := util.ReadToEnd(conn, WRITE_VALUES.Bytes[:]); err != nil {
+		if err := util.ReadToEnd(conn, WRITE_VALUES[:]); err != nil {
 			fmt.Println("Sensor disconnecting: ", err.Error())
 			quit = true
 			HAS_SENSOR = false
@@ -132,7 +126,7 @@ func handleActuator(conn net.Conn, error_channel chan byte) {
 		READ_MUTEX.Lock()
 		var bytes = *READ_VALUES
 		READ_MUTEX.Unlock()
-		if err := util.WriteToEnd(conn, bytes.Bytes[:]); err != nil {
+		if err := util.WriteToEnd(conn, bytes[:]); err != nil {
 			fmt.Println("Actuator disconnecting: ", err.Error())
 			HAS_ACTUATOR = false
 			return
@@ -166,7 +160,7 @@ func swap_pointers() {
 func printState() {
 	for {
 		time.Sleep(5 * time.Second)
-		bytes := &READ_VALUES.Bytes
+		bytes := *READ_VALUES
 		fmt.Printf(
 			"bytes: %v | T%d | P%d | L%d | C%d\n",
 			bytes,

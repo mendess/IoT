@@ -13,7 +13,7 @@ import (
 func handleSensor(conn net.Conn, port io.ReadWriteCloser) {
 	defer port.Close()
 	bufReader := bufio.NewReaderSize(port, 10)
-	var buffer [util.PACKET_SIZE]byte
+	buffer := util.MakeEmptyPacket()
 	err := util.ReadToEnd(conn, buffer[:])
 	if err != nil {
 		fmt.Println("Error getting current state", err.Error())
