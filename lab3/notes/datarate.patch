@@ -1,0 +1,38 @@
+diff --git a/lab3/communication/serial_interface/actuator.go b/lab3/communication/serial_interface/actuator.go
+index fcd970f..80a7c75 100644
+--- a/lab3/communication/serial_interface/actuator.go
++++ b/lab3/communication/serial_interface/actuator.go
+@@ -14,7 +14,21 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
+ 	old := util.MakeEmptyPacket()
+ 	first_write := true
+ 	go detect_errors(conn, port)
++	data_rates := make([]uint, 0, 512)
++	var current_count uint = 0
++	ticker := time.NewTicker(time.Second)
+ 	for {
++		select {
++		case <-ticker.C:
++			data_rates = append(data_rates, current_count)
++			current_count = 0
++			var sum uint = 0
++			for _, c := range data_rates {
++				sum += c
++			}
++			println("Avg: ", sum/uint(len(data_rates)), "bytes/second")
++		default:
++		}
+ 		if err := util.ReadToEnd(conn, buffer[:]); err != nil {
+ 			fmt.Println("Error reading from server", err.Error())
+ 			break
+@@ -23,9 +37,10 @@ func handleActuator(conn net.Conn, port io.ReadWriteCloser) {
+ 			// fmt.Println("Invalid packet")
+ 			continue
+ 		}
+-		if old != buffer {
++		if true || old != buffer {
+ 			fmt.Printf("Writing %v\n", buffer)
+ 			err := util.WriteToEnd(port, buffer[:])
++			current_count += uint(len(buffer))
+ 			if err != nil {
+ 				fmt.Printf("Failed to write %v Reason: %v\n", buffer, err)
+ 				return

@@ -1,4 +1,4 @@
-# Best version of temperature calculation
+# Temperature calculations
 
 ## Method
 
@@ -10,7 +10,21 @@ minutes and gather how many 'r\n' are written to the serial port.
 | float 1       | `(((voltage / 1024.0) * 5.0) - 0.5) * 100.0;` | 12400  |
 | float 2       | `((500.0 * voltage) / 1024.0) - 50.0;`        | 13066  |
 | short (16bit) | `((50 * voltage) / 102) - 50;`                | 14600  |
-| long  (32bit) | `((500 * (u32) voltage) >> 10) - 50;`         | 15533  |
+| long  (32bit) | `((500 * (uint32_t) voltage) >> 10) - 50;`         | 15533  |
 
 For the `short` version, the formula had to be adapted to avoid overflows, hence
 the `50` instead of `500` and the `102` instead of the `1024`.
+
+# Data rate
+
+## Without writting repeats
+
+| average | 682 |
+| max     | 752 |
+| min     | 461 |
+
+## Writting repeats
+
+| average | 805286 |
+| max     | 876945 |
+| min     | 521628 |
