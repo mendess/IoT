@@ -1,3 +1,5 @@
+#include "config.hpp"
+
 #ifndef SAMPLES
 #    define SAMPLES 16
 #endif
@@ -13,27 +15,23 @@ constexpr auto integer_log(size_t const x) -> size_t {
 constexpr auto SHIFT = integer_log(SAMPLES);
 constexpr auto N_SAMPLES = 1 << SHIFT;
 
-enum Sensors: u8 {
-    Temperature = A2,
-    Light = A1,
-    Potentiometer = A0,
-};
-
 class Sensor {
   private:
     size_t read_index;
     u16 total;
     u16 readings[N_SAMPLES];
     Sensors const pin;
+    Led const led;
 
   public:
     char const sensor_name;
 
-    constexpr explicit Sensor(Sensors const pin, char const sensor_name)
+    constexpr explicit Sensor(Config const conf, char const sensor_name)
         : read_index{0},
           total{0},
           readings{},
-          pin{pin},
+          pin{conf.analog},
+          led{conf.led},
           sensor_name{sensor_name} {}
 
     /**
@@ -55,5 +53,9 @@ class Sensor {
 
         // calculate the average:
         return total / N_SAMPLES;
+    }
+
+    void setup() {
+        pinMode(led, OUTPUT);
     }
 };

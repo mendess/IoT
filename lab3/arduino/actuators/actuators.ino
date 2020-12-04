@@ -2,30 +2,34 @@
 
 enum { TemperatureThreshold = 28 };
 
-void temperature(Led led, u16 voltage) {
-    auto degreesC = ((500 * (u32) voltage) >> 10) - 50;
+/* Update state functions */
+
+void temperature(Actuator const& self, u16 voltage) {
+    int32_t degreesC = ((500 * (uint32_t) voltage) >> 10) - 50;
     auto w = degreesC > TemperatureThreshold ? HIGH : LOW;
-    digitalWrite(led, w);
+    self.checked_digital_write(w);
 }
 
-void light(Led led, u16 voltage) {
-    analogWrite(led, map(voltage, 1, 1021, 255, 0));
+void light(Actuator const& self, u16 voltage) {
+    self.checked_analog_write(map(voltage, 1, 1021, 255, 0));
 }
 
 static u32 half_blink_interval = 100;
 
-void potentiometer(Led led, u16 voltage) {
-    (void) led;
+void potentiometer(Actuator const& self, u16 voltage) {
+    (void) self;
     half_blink_interval = map(voltage, 0, 1023, 100, 1000);
 }
 
-void blink_potentiometer() {
+/* blink green led task */
+
+void blink_potentiometer(Actuator const& self) {
     static u32 last_blink_time = 0UL;
     static bool led_on = false;
 
     u32 const now = millis();
     if (last_blink_time + half_blink_interval < now) {
-        digitalWrite(Green, led_on = !led_on);
+        self.checked_digital_write(led_on = !led_on);
         last_blink_time = now;
     }
 }
@@ -33,18 +37,21 @@ void blink_potentiometer() {
 #define NUM_SENSORS 3
 
 constexpr Actuator SENSORS[NUM_SENSORS] = {
-    Actuator(Yellow, temperature),
-    Actuator(Green, potentiometer),
-    Actuator(Red, light)};
+    Actuator(Temperature, temperature),
+    Actuator(Potentiometer, potentiometer),
+    Actuator(Light, light)};
 
 auto read_serial(u16* msg) -> bool {
-    byte buf[NUM_SENSORS * 2];
+    byte buf[(NUM_SENSORS + 1) * 2];
     if (!Serial.available()) return false;
 
     size_t read_so_far = 0;
     while (read_so_far != sizeof buf)
         read_so_far +=
             Serial.readBytes(buf + read_so_far, sizeof(buf) - read_so_far);
+
+    if (buf[sizeof(buf) - 1] != 4) return false;
+
 
     msg[0] = buf[0] | ((u16) buf[1]) << 8;
     msg[1] = buf[2] | ((u16) buf[3]) << 8;
@@ -58,11 +65,11 @@ void setup() {
     Serial.begin(9600);
 }
 
-static u16 msg[NUM_SENSORS];
-
 void loop() {
-    if (read_serial(msg))
+    static u16 msg[NUM_SENSORS + 1];
+    if (read_serial(msg)) {
         for (size_t i = 0; i < NUM_SENSORS; ++i) SENSORS[i].update(msg[i]);
-    blink_potentiometer();
+    }
+    blink_potentiometer(SENSORS[1]);
     delay(1);
 }
