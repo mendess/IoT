@@ -103,7 +103,6 @@ func receive_errors(conn net.Conn, error_channel chan byte, quit *bool) {
 	for {
 		select {
 		case err := <-error_channel:
-			fmt.Println("Receiving error", err)
 			util.WriteToEnd(conn, []byte{err})
 		default:
 			if *quit {
@@ -140,7 +139,6 @@ func send_errors(conn net.Conn, error_channel chan byte) {
 		if n, err := conn.Read(buf[:]); err != nil {
 			return
 		} else if n == len(buf) {
-			fmt.Println("Sending error", buf[0])
 			select {
 			case error_channel <- buf[0]:
 			default:
