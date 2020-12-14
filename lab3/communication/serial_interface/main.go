@@ -18,6 +18,7 @@ type Options struct {
 	Port string
 	Mode string
 	Mock bool
+    Serial string
 }
 
 func parseArgs() Options {
@@ -25,6 +26,7 @@ func parseArgs() Options {
 	flag.StringVar(&opt.Host, "h", "iot-lab3.herokuapp.com", "the host to connect to")
 	flag.StringVar(&opt.Port, "p", "80", "the port to connect to")
 	flag.StringVar(&opt.Mode, "m", "sensor", "Either 'sensor' or 'actuator'")
+	flag.StringVar(&opt.Serial, "s", "/dev/ttyACM0", "The serial port")
 	flag.BoolVar(&opt.Mock, "i", false, "read from terminal instead of arduino")
 	flag.Parse()
 	return opt
@@ -54,7 +56,7 @@ func main() {
 	if options.Mock {
 		port = Terminal{}
 	} else {
-		port = openSerial()
+		port = openSerial(options.Serial)
 	}
 	go handle_signals(conn)
 	switch options.Mode {
@@ -68,9 +70,10 @@ func main() {
 	}
 }
 
-func openSerial() io.ReadWriteCloser {
+func openSerial(port_name string) io.ReadWriteCloser {
+    fmt.Println("Opening serial port", port_name)
 	options := serial.OpenOptions{
-		PortName:        "/dev/ttyACM0",
+		PortName:        port_name,
 		BaudRate:        9600,
 		DataBits:        8,
 		StopBits:        1,
