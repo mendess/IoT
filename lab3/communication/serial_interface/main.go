@@ -23,7 +23,7 @@ type Options struct {
 
 func parseArgs() Options {
 	var opt Options
-	flag.StringVar(&opt.Host, "h", "iot-lab3.herokuapp.com", "the host to connect to")
+	flag.StringVar(&opt.Host, "h", "localhost", "the host to connect to")
 	flag.StringVar(&opt.Port, "p", "80", "the port to connect to")
 	flag.StringVar(&opt.Mode, "m", "sensor", "Either 'sensor' or 'actuator'")
 	flag.StringVar(&opt.Serial, "s", "/dev/ttyACM0", "The serial port")
